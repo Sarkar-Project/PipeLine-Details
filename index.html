@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Table Search</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .input-fields {
+        margin-bottom: 20px;
+      }
+
+      .input-field {
+        margin-bottom: 10px;
+        margin-right: 10px;
+      }
+
+      .input-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .input-field input {
+        width: 100%;
+        height: 40px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      .button-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .button-container button {
+        width: 150px;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #4caf50;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .button-container button:hover {
+        background-color: #3e8e41;
+      }
+
+      #results {
+        margin-top: 20px;
+      }
+
+      .table-container {
+        margin-bottom: 20px;
+      }
+
+      .table-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Table Search</h1>
+      </div>
+
+      <div class="input-fields">
+        <div class="input-field">
+          <label for="searchLabel">Label:</label>
+          <input type="text" id="searchLabel" placeholder="Enter label..." />
+        </div>
+        <div class="input-field">
+          <label for="searchNodeStart">Node Start:</label>
+          <input
+            type="text"
+            id="searchNodeStart"
+            placeholder="Enter node start..."
+          />
+        </div>
+        <div class="input-field">
+          <label for="searchNodeStop">Node Stop:</label>
+          <input
+            type="text"
+            id="searchNodeStop"
+            placeholder="Enter node stop..."
+          />
+        </div>
+        <div class="input-field">
+          <label for="searchDiameter">Diameter (mm):</label>
+          <input
+            type="text"
+            id="searchDiameter"
+            placeholder="Enter diameter..."
+          />
+        </div>
+        <div class="input-field">
+          <label for="searchLength">Length (m):</label>
+          <input type="text" id="searchLength" placeholder="Enter length..." />
+        </div>
+        <div class="input-field">
+          <label for="searchMaterial">Material:</label>
+          <input
+            type="text"
+            id="searchMaterial"
+            placeholder="Enter material..."
+          />
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button onclick="loadData()">Load Data</button>
+        <button onclick="searchTables()">Search</button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <script>
+      let allTablesData = {};
+
+      function loadData() {
+        fetch("excel-to-json.json")
+          .then((response) => response.json())
+          .then((data) => {
+            allTablesData = data;
+            console.log("Data loaded successfully");
+          })
+          .catch((error) => {
+            console.error("Error loading data:", error);
+          });
+      }
+
+      function searchTables() {
+        if (Object.keys(allTablesData).length === 0) {
+          alert("Please load data first");
+          return;
+        }
+
+        const searchLabel = document
+          .getElementById("searchLabel")
+          .value.trim()
+          .toLowerCase();
+        const searchNodeStart = document
+          .getElementById("searchNodeStart")
+          .value.trim()
+          .toLowerCase();
+        const searchNodeStop = document
+          .getElementById("searchNodeStop")
+          .value.trim()
+          .toLowerCase();
+        const searchDiameter = document
+          .getElementById("searchDiameter")
+          .value.trim()
+          .toLowerCase();
+        const searchLength = document
+          .getElementById("searchLength")
+          .value.trim()
+          .toLowerCase();
+        const searchMaterial = document
+          .getElementById("searchMaterial")
+          .value.trim()
+          .toLowerCase();
+
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        let hasResults = false;
+
+        for (const tableName in allTablesData) {
+          const tableData = allTablesData[tableName];
+          const matchingRows = tableData.filter((row) => {
+            let match = true;
+
+            if (
+              searchLabel !== "" &&
+              !row["Label                          "]
+                .toLowerCase()
+                .includes(searchLabel)
+            ) {
+              match = false;
+            }
+
+            if (
+              searchNodeStart !== "" &&
+              !row["Node Start   "]
+                .toString()
+                .toLowerCase()
+                .includes(searchNodeStart)
+            ) {
+              match = false;
+            }
+
+            if (
+              searchNodeStop !== "" &&
+              !row["Node Stop      "]
+                .toString()
+                .toLowerCase()
+                .includes(searchNodeStop)
+            ) {
+              match = false;
+            }
+
+            if (
+              searchDiameter !== "" &&
+              !row["Diameter (mm)    "]
+                .toString()
+                .toLowerCase()
+                .includes(searchDiameter)
+            ) {
+              match = false;
+            }
+
+            if (
+              searchLength !== "" &&
+              !row["Length (m) "]
+                .toString()
+                .toLowerCase()
+                .includes(searchLength)
+            ) {
+              match = false;
+            }
+
+            if (
+              searchMaterial !== "" &&
+              !row["Material"].toLowerCase().includes(searchMaterial)
+            ) {
+              match = false;
+            }
+
+            return match;
+          });
+
+          if (matchingRows.length > 0) {
+            hasResults = true;
+
+            const tableContainer = document.createElement("div");
+            tableContainer.className = "table-container";
+
+            const tableTitle = document.createElement("div");
+            tableTitle.className = "table-title";
+            tableTitle.textContent = tableName;
+            tableContainer.appendChild(tableTitle);
+
+            const table = document.createElement("table");
+            const headerRow = table.insertRow();
+            const headers = Object.keys(tableData[0]);
+            headers.forEach((headerText) => {
+              const th = document.createElement("th");
+              th.textContent = headerText.trim();
+              headerRow.appendChild(th);
+            });
+
+            matchingRows.forEach((row) => {
+              const tableRow = table.insertRow();
+              headers.forEach((header) => {
+                const cell = tableRow.insertCell();
+                cell.textContent = row[header];
+              });
+            });
+
+            tableContainer.appendChild(table);
+            resultsDiv.appendChild(tableContainer);
+          }
+        }
+
+        if (!hasResults) {
+          resultsDiv.innerHTML = "<p>No matching results found.</p>";
+        }
+      }
+    </script>
+  </body>
+</html>
