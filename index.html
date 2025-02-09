@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Table Search</title>
-   <style>
+    <style>
       body {
         font-family: Arial, sans-serif;
         background-color: #f2f2f2;
@@ -124,6 +124,34 @@
     </style>
   </head>
   <body>
+    <div class="login">
+      <input
+        class="input-field"
+        type="password"
+        id="login-id"
+        placeholder="Enter Your Login Id..."
+      />
+      <input
+        class="input-field"
+        type="password"
+        id="login-password"
+        placeholder="Enter Your Password..."
+      />
+      <!-- <button onclick="login()">Login</button> -->
+    </div>
+    <style>
+      .login {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        padding: 40px;
+        background: #01572f;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
     <div class="container">
       <div class="header">
         <h1>Table Search</h1>
@@ -182,17 +210,64 @@
 
     <script>
       let allTablesData = {};
+      let secretKey = "";
+      if (
+        !localStorage.getItem("key1") ||
+        localStorage.getItem("key1") === "" ||
+        localStorage.getItem("key1") === null
+      ) {
+        secretKey = prompt("Enter Secret Key");
+        localStorage.setItem("key1", secretKey);
+      } else {
+        secretKey = localStorage.getItem("key1");
+      }
+
+      // Encrypt function
+      function encryptData(data) {
+        const dataStr = JSON.stringify(data); // Convert object to string
+        return CryptoJS.AES.encrypt(dataStr, secretKey).toString();
+      }
+
+      // Decrypt function
+      function decryptData(ciphertext) {
+        let bytes = CryptoJS.AES.decrypt(ciphertext, secretKey);
+        let decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decryptedData); // Convert back to object
+      }
 
       function loadData() {
-        fetch("excel-to-json.json")
-          .then((response) => response.json())
-          .then((data) => {
-            allTablesData = data;
-            console.log("Data loaded successfully");
-          })
-          .catch((error) => {
-            console.error("Error loading data:", error);
-          });
+        const LoginId = document.getElementById("login-id").value;
+        const Password = document.getElementById("login-password").value;
+
+        // Predefined encrypted credentials (this must be decrypted for comparison)
+        const encryptedStoredCreds =
+          "U2FsdGVkX1+x9beNmpLZ6xjkPusXMIlhIXna1UQFHef23AqkusG5hDzeJM6yN3lg0ClKUsLz2X2B6tVDC+yJSA==";
+
+        // Decrypt stored credentials
+        const storedCreds = decryptData(encryptedStoredCreds);
+
+        // Encrypt user input for comparison
+        const encryptedUserInput = encryptData({ LoginId, Password });
+
+        // Compare decrypted stored credentials with raw user input
+        if (
+          storedCreds.LoginId === LoginId &&
+          storedCreds.Password === Password
+        ) {
+          fetch("entxt.txt") // Fetch encrypted file
+            .then((response) => response.text())
+            .then((encryptedData) => {
+              const decryptedData = decryptData(encryptedData);
+              console.log("Decrypted Data from File:", decryptedData);
+              allTablesData = decryptedData;
+              // Update UI
+              document.getElementsByClassName("login")[0].style.display =
+                "none";
+            })
+            .catch((error) => console.error("Error loading data:", error));
+        } else {
+          alert("Invalid Login Id or Password");
+        }
       }
 
       function searchTables() {
@@ -333,5 +408,6 @@
         }
       }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   </body>
 </html>
